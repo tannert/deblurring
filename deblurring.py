@@ -7,9 +7,11 @@ from matplotlib import pyplot as plt
 
 def motion_psf(size, theta):
 	"""
+	Sets up a convolution/deconvolution kernel based on kernel size and rotation angle
+
 	Inputs:
 
-		 size: int  , denotes the size of the kernel
+		size: int  , denotes the size of the kernel
 		theta: float, angle of the rotation in degrees. positive values are counter-clockwise
 						rotation. Negative values are clockwise.
 	
@@ -19,16 +21,10 @@ def motion_psf(size, theta):
 
 	"""
 
-	
-	if size%2 == 1:
-		# leave it as is if already odd
-		n = size
+	# n needs to be odd
+	n = size if (size%2 == 1) else size + 1
 
-	else:
-		# if it's even then make it odd
-		n = size + 1
-
-	half_n = int(np.floor(n/2))	 	
+	half_n = n//2	 	
 
 	kernel = np.zeros((n,n)).astype('float32')
 
@@ -43,7 +39,7 @@ def motion_psf(size, theta):
 	kernel = cv2.warpAffine(kernel, rotation, (n,n))
 
 	"""
-	 this was to see what the kernel looked like, might have a use for this still
+	this was to see what the kernel looked like, might have a use for this still
 	plt.imshow(kernel, cmap = 'gray')
 	plt.show()
 	"""
@@ -157,14 +153,14 @@ def deconvolve(convolved_image, PSF, epsilon = 1e-4):
 
 path = 'index.jpeg'
 image = cv2.imread(path, 0)
-#plt.imshow(image, cmap = 'gray')
-#plt.show()
+plt.imshow(image, cmap = 'gray')
+plt.show()
 
 kernel = motion_psf(20,0)
 
 test_conv = convolve(image,kernel)
-#plt.imshow(test_conv, cmap='gray')
-#plt.show()
+plt.imshow(test_conv, cmap='gray')
+plt.show()
 
 restored = deconvolve(test_conv,kernel)
 plt.imshow(restored.reshape(restored.shape[0],restored.shape[1]), cmap = 'gray')
