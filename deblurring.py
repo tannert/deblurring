@@ -2,9 +2,7 @@ import cv2
 import numpy as np
 
 from matplotlib import pyplot as plt
-import scipy.signal as signal
 
-from scipy import fftpack
 
 
 def motion_psf(size, theta):
@@ -45,10 +43,10 @@ def motion_psf(size, theta):
 	#plt.imshow(kernel, cmap = 'gray')
 	#plt.show()
 	
-	print np.sum(kernel)
+
 	return kernel
 
-def foucs_psf(l=5, sig=1.):
+def focus_psf(l=5, sig=1.):
     """
     creates gaussian kernel with side length l and a sigma of sig
     which approximates out of focus blur
@@ -62,7 +60,6 @@ def foucs_psf(l=5, sig=1.):
 
     kernel = np.exp(-(xx**2 + yy**2) / (2. * sig**2))
 
-    print np.sum(kernel)
     return kernel
 
 def convolve(image, kernel):
@@ -135,10 +132,14 @@ def deconvolve(convolved_image, PSF):
 
 	# create the full sized array with the kernel in it
 	#	create the zeros array
-	new_kern = np.zeros_like(convolved_image)
+	new_kern = np.zeros_like(convolved_image).astype('float32')
 
 	# add in the kernel
 	new_kern[:PSF.shape[0], :PSF.shape[1]] = PSF
+
+	plt.imshow(new_kern,cmap='gray')
+	plt.title('PADDED PSF')
+	plt.show()
 
 	# use the FFT on the convolved image and kernel	
 	imag_fft = np.fft.fftn(convolved_image)
@@ -154,54 +155,77 @@ def deconvolve(convolved_image, PSF):
 
 	return deconvolved_image
 
+def add_noise(image,n=300):
+	"""
+		adds salt and pepper noise to the image
+
+	Inputs:
+
+		image: an NxM numpy array of the image to be blurred
+		n 	 : an integer control how much noise is added. The larger n is the less noise there will be
+
+	Outputs:
+
+		noisy_image: an NxM numpy array representing the image with salt and pepper noise added
+	"""
+	noisy_image = test_conv.copy()
+
+	noise_vec = [(np.random.randint(0,image.shape[0]), np.random.randint(0,image.shape[1])) for k in xrange(image.shape[0] * image.shape[1] / n) ]
+
+	for noise in noise_vec:
+		# sets half of the randomly selected locations to 0 and the others to 255 (black and white)
+		if np.random.random() < .5:
+			noisy_image[noise] = 0
+		else:
+			noisy_image[noise] = 255
+
+	return noisy_image
+
 #load in the image and display it
 path = 'index.jpeg'
 image = cv2.imread(path, 0)
-plt.imshow(image, cmap = 'gray')
-plt.show()
+#plt.imshow(image, cmap = 'gray')
+#plt.show()
 
 # generate our motion kernels
 motion_kernel = motion_psf(20,0)
-focus_kernel  = foucs_psf(11,5)
+focus_kernel  = focus_psf(11,3)
 
 # show what our kernels look like
-plt.imshow(focus_kernel)
-plt.show()
+#plt.imshow(focus_kernel)
+#plt.show()
 
-plt.imshow(motion_kernel)
-plt.show()
+#plt.imshow(motion_kernel)
+#plt.show()
 
 # show what our image looks like convolved with the motion kernel
 test_conv  = convolve(image,motion_kernel)
-plt.imshow(test_conv, cmap='gray')
-plt.show()
+#plt.imshow(test_conv, cmap='gray')
+#plt.show()
 
 # show what our image looks like convolved with the focus kernel
 deacon = convolve(image, focus_kernel)
-plt.imshow(deacon, cmap = 'gray')
-plt.show()
+#plt.imshow(deacon, cmap = 'gray')
+#plt.show()
 
 
 # show what our image looks like when it's deconvolved with the motion kernel
 original2  = np.real(deconvolve(test_conv, motion_kernel))
-plt.imshow(original2, cmap ='gray')
-plt.show()
+#plt.imshow(original2, cmap ='gray')
+#plt.show()
 
 # show what our image looks like when it's deconvolved with the focus kernel
 # this is broken and I don't know why
 focus_blur = np.real(deconvolve(deacon, focus_kernel))
-plt.imshow(focus_blur, cmap ='gray')
-plt.show()
+#plt.imshow(focus_blur, cmap ='gray')
+#plt.show()
 
-new_kern = np.zeros_like(image)
-
-print focus_kernel
+new_kern = np.zeros_like(image).astype('float32')
 
 new_kern[:focus_kernel.shape[0], :focus_kernel.shape[1]] = focus_kernel	
-# this is also broken and I don't know why
-print new_kern[:focus_kernel.shape[0], :focus_kernel.shape[1]].shape
-plt.imshow(new_kern)
-plt.show()
+
+#plt.imshow(new_kern, cmap='gray')
+#plt.show()
 
 def convolve2(star, psf):
     star_fft = np.fft.fftn(star)
@@ -215,38 +239,93 @@ def deconvolve2(star, psf):
 
 
 focus_test = convolve2(image,new_kern)
-plt.imshow(np.real(focus_test), cmap = 'gray')
-plt.show()
+#plt.imshow(np.real(focus_test), cmap = 'gray')
+#plt.show()
 
 focus_testd = np.real(deconvolve2(focus_test,new_kern))
-plt.imshow(focus_testd,cmap = 'gray')
-plt.show()
+#plt.imshow(focus_testd,cmap = 'gray')
+#plt.show()
 
 
 # show what our image looks like when it's deconvolved with the wrong
 original2  = np.real(deconvolve(deacon, motion_kernel))
-plt.imshow(original2, cmap ='gray')
-plt.show()
+#plt.imshow(original2, cmap ='gray')
+#plt.show()
 
 # add some noise to the image
-n = 400
-noisy_image = test_conv.copy()
-
-noise_vec = [(np.random.randint(0,image.shape[0]), np.random.randint(0,image.shape[1])) for k in xrange(image.shape[0] * image.shape[1] / n) ]
-
-for noise in noise_vec:
-	if np.random.random() < .5:
-		noisy_image[noise] = 200
-	else:
-		noisy_image[noise] = 255
-
-
-plt.imshow(noisy_image, cmap='gray')
-plt.show()
+noisy_image = add_noise(focus_test, 400)
+cv2.imwrite("noisy_image.jpg",noisy_image)
+#plt.imshow(noisy_image, cmap='gray')
+#plt.show()
 
 
 original2  = np.real(deconvolve(noisy_image, motion_kernel))
-plt.imshow(original2, cmap ='gray')
+#plt.imshow(original2, cmap ='gray')
+#plt.show()
+
+
+def variational_calculus(image):
+	u = image.copy()
+	delta_t = 1e-3
+	time_steps = 250
+	lam = 1.
+	epsilon = 1e-5
+
+	for i in range(time_steps):
+
+	    u_x     = (np.roll(u, -1, axis=1) - np.roll(u, 1, axis=1))/2.
+	    u_y     = (np.roll(u, -1, axis=0) - np.roll(u, 1, axis=0))/2.
+
+	    u_xx    = np.roll(u,-1, axis = 1 ) - 2.*u + np.roll(u, 1 , axis = 1)
+	    u_yy    = np.roll(u,-1, axis = 0 ) - 2.*u + np.roll(u, 1 , axis = 0)
+	    
+	    u_xy    = (np.roll(u_x, -1, axis=0) - np.roll(u_x, 1, axis=0))/2.
+	    
+	    u_t     = -lam*(u - image) + (u_xx*u_y**2 + u_yy*u_x**2 - 2*u_x*u_y*u_xy) / (epsilon + u_x**2 + u_y**2)**(3./2)
+	    
+	    u_next  = u_t * delta_t + u
+	    u       = u_next
+	    
+	plt.imshow(u , cmap = 'gray')
+	plt.show()
+
+	return u
+
+def variational_calculus(image):
+	u = image.copy()
+	delta_t = 1e-3
+	time_steps = 250
+	lam = 1.
+	epsilon = 1e-5
+
+	for i in range(time_steps):
+
+	    u_x     = (np.roll(u, -1, axis=1) - np.roll(u, 1, axis=1))/2.
+	    u_y     = (np.roll(u, -1, axis=0) - np.roll(u, 1, axis=0))/2.
+
+	    u_xx    = np.roll(u,-1, axis = 1 ) - 2.*u + np.roll(u, 1 , axis = 1)
+	    u_yy    = np.roll(u,-1, axis = 0 ) - 2.*u + np.roll(u, 1 , axis = 0)
+	    
+	    u_xy    = (np.roll(u_x, -1, axis=0) - np.roll(u_x, 1, axis=0))/2.
+	    
+	    u_t     = -lam*(u - image) + (u_xx*u_y**2 + u_yy*u_x**2 - 2*u_x*u_y*u_xy) / (epsilon + u_x**2 + u_y**2)**(3./2)
+	    
+	    u_next  = u_t * delta_t + u
+	    u       = u_next
+	    
+	plt.imshow(u , cmap = 'gray')
+	plt.show()
+
+	return u
+
+
+variation = variational_calculus(noisy_image)
+
+cv2.imwrite("variation.jpg",variation)
+
+dif = noisy_image - variation
+
+plt.imshow(dif,cmap='gray')
 plt.show()
 
 
