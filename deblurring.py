@@ -158,6 +158,7 @@ def deconvolve(convolved_image, PSF):
 path = 'index.jpeg'
 image = cv2.imread(path, 0)
 plt.imshow(image, cmap = 'gray')
+plt.title('Original Image (grayscale)')
 plt.show()
 
 # generate our motion kernels
@@ -166,31 +167,37 @@ focus_kernel  = foucs_psf(11,5)
 
 # show what our kernels look like
 plt.imshow(focus_kernel)
+plt.title('focus kernel')
 plt.show()
 
 plt.imshow(motion_kernel)
+plt.title('motion kernel')
 plt.show()
 
 # show what our image looks like convolved with the motion kernel
 test_conv  = convolve(image,motion_kernel)
 plt.imshow(test_conv, cmap='gray')
+plt.title('image convolved with the motion kernel')
 plt.show()
 
 # show what our image looks like convolved with the focus kernel
 deacon = convolve(image, focus_kernel)
 plt.imshow(deacon, cmap = 'gray')
+plt.title('image convolved with the focus kernel')
 plt.show()
 
 
 # show what our image looks like when it's deconvolved with the motion kernel
 original2  = np.real(deconvolve(test_conv, motion_kernel))
 plt.imshow(original2, cmap ='gray')
+plt.title('blurred image deconvolved')
 plt.show()
 
 # show what our image looks like when it's deconvolved with the focus kernel
 # this is broken and I don't know why
 focus_blur = np.real(deconvolve(deacon, focus_kernel))
 plt.imshow(focus_blur, cmap ='gray')
+plt.title('out-of-focus image deconvolved')
 plt.show()
 
 new_kern = np.zeros_like(image)
