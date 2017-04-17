@@ -184,14 +184,21 @@ def add_noise(image,n=300):
 #load in the image and display it
 path = 'index.jpeg'
 image = cv2.imread(path, 0)
+<<<<<<< HEAD
 #plt.imshow(image, cmap = 'gray')
 #plt.show()
+=======
+plt.imshow(image, cmap = 'gray')
+plt.title('Original Image (grayscale)')
+plt.show()
+>>>>>>> 84f6d6f5774ac08cf20b3f0e7fc25507decd5022
 
 # generate our motion kernels
 motion_kernel = motion_psf(20,0)
 focus_kernel  = focus_psf(11,3)
 
 # show what our kernels look like
+<<<<<<< HEAD
 #plt.imshow(focus_kernel)
 #plt.show()
 
@@ -207,18 +214,51 @@ test_conv  = convolve(image,motion_kernel)
 deacon = convolve(image, focus_kernel)
 #plt.imshow(deacon, cmap = 'gray')
 #plt.show()
+=======
+plt.imshow(focus_kernel)
+plt.title('focus kernel')
+plt.show()
+
+plt.imshow(motion_kernel)
+plt.title('motion kernel')
+plt.show()
+
+# show what our image looks like convolved with the motion kernel
+test_conv  = convolve(image,motion_kernel)
+plt.imshow(test_conv, cmap='gray')
+plt.title('image convolved with the motion kernel')
+plt.show()
+
+# show what our image looks like convolved with the focus kernel
+deacon = convolve(image, focus_kernel)
+plt.imshow(deacon, cmap = 'gray')
+plt.title('image convolved with the focus kernel')
+plt.show()
+>>>>>>> 84f6d6f5774ac08cf20b3f0e7fc25507decd5022
 
 
 # show what our image looks like when it's deconvolved with the motion kernel
 original2  = np.real(deconvolve(test_conv, motion_kernel))
+<<<<<<< HEAD
 #plt.imshow(original2, cmap ='gray')
 #plt.show()
+=======
+plt.imshow(original2, cmap ='gray')
+plt.title('blurred image deconvolved')
+plt.show()
+>>>>>>> 84f6d6f5774ac08cf20b3f0e7fc25507decd5022
 
 # show what our image looks like when it's deconvolved with the focus kernel
 # this is broken and I don't know why
 focus_blur = np.real(deconvolve(deacon, focus_kernel))
+<<<<<<< HEAD
 #plt.imshow(focus_blur, cmap ='gray')
 #plt.show()
+=======
+plt.imshow(focus_blur, cmap ='gray')
+plt.title('out-of-focus image deconvolved')
+plt.show()
+>>>>>>> 84f6d6f5774ac08cf20b3f0e7fc25507decd5022
 
 new_kern = np.zeros_like(image).astype('float32')
 
